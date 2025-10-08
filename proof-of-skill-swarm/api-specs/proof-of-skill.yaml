@@ -1,0 +1,349 @@
+openapi: 3.0.0
+info:
+  title: Proof-of-Skill Swarm API
+  version: 1.0.0
+  description: Complete API specification for the Proof-of-Skill Swarm system
+  contact:
+    name: Cognitive Genesis Protocol Team
+    email: support@proofofskill.swarm
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://api.proofofskill.swarm
+    description: Production server
+
+paths:
+  /api/v1/intent:
+    post:
+      summary: Process user intent for skill proof
+      description: Captures user intent and translates it into processable format using quantum-inspired methods
+      tags:
+        - Intent Processing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - intent
+              properties:
+                intent:
+                  type: string
+                  description: Natural language description of skill to prove
+                  example: "I want to prove my React debugging ability"
+                context:
+                  type: object
+                  description: Additional context for intent processing
+                  properties:
+                    userLevel:
+                      type: string
+                      enum: [beginner, intermediate, advanced]
+                    timeAvailable:
+                      type: integer
+                      description: Available time in minutes
+      responses:
+        '200':
+          description: Intent processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  intentId:
+                    type: string
+                    example: "a1b2c3d4e5f6g7h8"
+                  originalIntent:
+                    type: string
+                  processedIntent:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      domain:
+                        type: string
+                      target_skill:
+                        type: string
+                      difficulty:
+                        type: integer
+                  concepts:
+                    type: object
+                  quantumState:
+                    type: object
+                    properties:
+                      dimensions:
+                        type: integer
+                      entropy:
+                        type: number
+                      coherence:
+                        type: number
+                  timestamp:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /api/v1/challenge:
+    post:
+      summary: Generate skill challenge
+      description: Generates a personalized challenge based on processed intent
+      tags:
+        - Challenge Generation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - processedIntent
+              properties:
+                processedIntent:
+                  type: object
+                  description: Processed intent from intent endpoint
+                personalization:
+                  type: object
+                  description: User-specific personalization parameters
+      responses:
+        '200':
+          description: Challenge generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Challenge'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /api/v1/challenge/{challengeId}:
+    get:
+      summary: Get challenge details
+      tags:
+        - Challenge Generation
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Challenge found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Challenge'
+        '404':
+          description: Challenge not found
+  
+  /api/v1/proof:
+    post:
+      summary: Generate ZK-proof
+      description: Generates a zero-knowledge proof of skill completion
+      tags:
+        - Proof Generation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - challengeData
+                - solutionData
+                - solverAddress
+              properties:
+                challengeData:
+                  type: object
+                  description: Challenge details
+                solutionData:
+                  type: object
+                  properties:
+                    solution:
+                      type: string
+                    completionTime:
+                      type: integer
+                    tasksCompleted:
+                      type: integer
+                solverAddress:
+                  type: string
+                  pattern: '^0x[a-fA-F0-9]{40}$'
+      responses:
+        '200':
+          description: Proof generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proof'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /api/v1/proof/{proofId}:
+    get:
+      summary: Get proof details
+      tags:
+        - Proof Generation
+      parameters:
+        - name: proofId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Proof found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proof'
+        '404':
+          description: Proof not found
+  
+  /api/v1/proof/{proofId}/verify:
+    post:
+      summary: Verify ZK-proof
+      tags:
+        - Proof Generation
+      parameters:
+        - name: proofId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Proof verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  proofId:
+                    type: string
+                  verified:
+                    type: boolean
+                  score:
+                    type: integer
+                  timestamp:
+                    type: string
+                    format: date-time
+
+components:
+  schemas:
+    Challenge:
+      type: object
+      properties:
+        challengeId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [debug, implementation, optimization, design, refactoring]
+        domain:
+          type: string
+        difficulty:
+          type: integer
+          minimum: 1
+          maximum: 10
+        timeLimit:
+          type: integer
+          description: Time limit in minutes
+        reward:
+          type: integer
+          description: Reward in tokens
+        tasks:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              description:
+                type: string
+              required:
+                type: boolean
+              points:
+                type: integer
+        evaluationCriteria:
+          type: array
+          items:
+            type: object
+            properties:
+              criterion:
+                type: string
+              weight:
+                type: number
+              description:
+                type: string
+        startTime:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    
+    Proof:
+      type: object
+      properties:
+        proofId:
+          type: string
+        challengeId:
+          type: string
+        solverAddress:
+          type: string
+        score:
+          type: integer
+        completionTime:
+          type: integer
+        solutionHash:
+          type: string
+        zkProof:
+          type: string
+        verified:
+          type: boolean
+        timestamp:
+          type: string
+          format: date-time
+        proofType:
+          type: string
+        securityLevel:
+          type: string
+    
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: integer
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+tags:
+  - name: Intent Processing
+    description: Quantum intent processing endpoints
+  - name: Challenge Generation
+    description: Challenge generation and management
+  - name: Proof Generation
+    description: Zero-knowledge proof generation and verification

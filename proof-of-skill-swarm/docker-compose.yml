@@ -1,0 +1,235 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # Quantum Intent Processing
+  quantum-intent-processor:
+    build: ./backend/services/quantum-intent-processor
+    environment:
+      - PENROSE_FRAMEWORK=enabled
+      - QUANTUM_SIMULATION=true
+      - NATURAL_LANGUAGE_MODEL=mistral-7b-instruct
+      - QDRANT_URL=http://qdrant-db:6333
+      - NEURAL_NETWORK_URL=http://neural-network:3010
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./quantum-state:/app/quantum-state
+    depends_on:
+      - qdrant-db
+      - neural-network
+    networks:
+      - swarm-network
+
+  # AI Challenge Generator
+  challenge-generator:
+    build: ./backend/services/challenge-generator
+    environment:
+      - MODEL_PATH=/models/codellama-13b
+      - CHALLENGE_COMPLEXITY=adaptive
+      - PERSONALIZATION_ENGINE=enabled
+      - NEURAL_NETWORK_URL=http://neural-network:3010
+      - QDRANT_URL=http://qdrant-db:6333
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./models:/app/models
+      - ./challenges:/app/challenges
+    depends_on:
+      - neural-network
+      - qdrant-db
+    networks:
+      - swarm-network
+
+  # Task Decomposition Engine
+  task-decomposer:
+    build: ./backend/services/task-decomposer
+    environment:
+      - GNN_MODEL_PATH=/models/gnn.pt
+      - TASK_QUEUE_REDIS=redis://redis:6379
+      - NEURAL_NETWORK_URL=http://neural-network:3010
+    ports:
+      - "3003:3003"
+    depends_on:
+      - redis
+      - neural-network
+    networks:
+      - swarm-network
+
+  # Human-AI Symbiosis Interface
+  symbiosis-interface:
+    build: ./backend/services/symbiosis-interface
+    environment:
+      - NEURAL_FEEDBACK=enabled
+      - BCI_COMPATIBILITY=true
+      - REAL_TIME_ADAPTATION=true
+      - NEURAL_NETWORK_URL=http://neural-network:3010
+      - QUANTUM_INTENT_URL=http://quantum-intent-processor:3001
+    ports:
+      - "3004:3004"
+    depends_on:
+      - neural-network
+      - quantum-intent-processor
+    networks:
+      - swarm-network
+
+  # ZK-STARK Proof Generator
+  zk-proof-generator:
+    build: ./backend/services/zk-proof-generator
+    environment:
+      - ZK_STARK_LIB_PATH=/lib/starklib
+      - POST_QUANTUM_SIG=dilithium
+      - PROOF_COMPLEXITY=adaptive
+      - LOGGER_URL=http://challenge-completion-logger:3011
+    ports:
+      - "3005:3005"
+    volumes:
+      - ./proofs:/app/proofs
+    depends_on:
+      - challenge-completion-logger
+    networks:
+      - swarm-network
+
+  # Steganographic Proof Layer
+  steganographic-layer:
+    build: ./backend/services/steganographic-layer
+    environment:
+      - STEGANOGRAPHY_ALGORITHM=lsb
+      - PROOF_STRENGTH=high
+      - DETECTION_RESISTANCE=maximum
+      - ZK_PROOF_URL=http://zk-proof-generator:3005
+    ports:
+      - "3006:3006"
+    volumes:
+      - ./proofs:/app/proofs
+    depends_on:
+      - zk-proof-generator
+    networks:
+      - swarm-network
+
+  # ERC-6551 Skill NFT System
+  skill-nft-system:
+    build: ./backend/services/skill-nft-system
+    environment:
+      - ETHEREUM_RPC=${ETH_RPC_URL:-http://ethereum-node:8545}
+      - CONTRACT_ADDRESS=${SKILL_NFT_CONTRACT:-0x0000000000000000000000000000000000000000}
+      - DYNAMIC_METADATA=enabled
+      - STEGANOGRAPHIC_URL=http://steganographic-layer:3006
+    ports:
+      - "3007:3007"
+    depends_on:
+      - ethereum-node
+      - steganographic-layer
+    networks:
+      - swarm-network
+
+  # Evolution Engine
+  evolution-engine:
+    build: ./backend/services/evolution-engine
+    environment:
+      - NAS_ALGORITHM=efficient_neural_architecture_search
+      - KNOWLEDGE_DISTILLER=distilbert
+      - SELF_IMPROVEMENT_RATE=adaptive
+      - NEURAL_NETWORK_URL=http://neural-network:3010
+      - SKILL_NFT_URL=http://skill-nft-system:3007
+    ports:
+      - "3008:3008"
+    volumes:
+      - ./models:/app/models
+      - ./evolution-data:/app/evolution-data
+    depends_on:
+      - neural-network
+      - skill-nft-system
+    networks:
+      - swarm-network
+
+  # Consciousness Metrics
+  consciousness-metrics:
+    build: ./backend/services/consciousness-metrics
+    environment:
+      - IIT_IMPLEMENTATION=pyphi
+      - EMERGENCE_THRESHOLD=0.75
+      - SAFETY_PROTOCOLS=enabled
+      - NEURAL_NETWORK_URL=http://neural-network:3010
+      - EVOLUTION_ENGINE_URL=http://evolution-engine:3008
+    ports:
+      - "3009:3009"
+    depends_on:
+      - neural-network
+      - evolution-engine
+    networks:
+      - swarm-network
+
+  # Supporting Services
+  qdrant-db:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - ./qdrant-storage:/qdrant/storage
+    networks:
+      - swarm-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - swarm-network
+
+  neural-network:
+    build: ./backend/services/neural-network
+    ports:
+      - "3010:3010"
+    volumes:
+      - ./models:/app/models
+    networks:
+      - swarm-network
+
+  ethereum-node:
+    image: ethereum/client-go:latest
+    command: --dev --http --http.addr 0.0.0.0 --http.api eth,net,web3,personal --http.corsdomain "*"
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./ethereum-data:/root/.ethereum
+    networks:
+      - swarm-network
+
+  challenge-completion-logger:
+    build: ./backend/services/challenge-completion-logger
+    environment:
+      - LOG_LEVEL=debug
+      - STORAGE_PATH=/app/logs
+    ports:
+      - "3011:3011"
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - swarm-network
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_QUANTUM_INTENT_URL=http://localhost:3001
+      - REACT_APP_CHALLENGE_GENERATOR_URL=http://localhost:3002
+      - REACT_APP_ZK_PROOF_URL=http://localhost:3005
+      - REACT_APP_SKILL_NFT_URL=http://localhost:3007
+    depends_on:
+      - quantum-intent-processor
+      - challenge-generator
+      - zk-proof-generator
+      - skill-nft-system
+    networks:
+      - swarm-network
+
+networks:
+  swarm-network:
+    driver: bridge
+
+volumes:
+  qdrant-storage:
+  ethereum-data:

@@ -1,0 +1,324 @@
+.proof-of-skill-interface {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.interface-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+}
+
+.interface-header h1 {
+  margin: 0 0 10px 0;
+  font-size: 2.5em;
+}
+
+.interface-header p {
+  margin: 0;
+  font-size: 1.2em;
+  opacity: 0.9;
+}
+
+.error-message {
+  background: #fee;
+  border: 1px solid #fcc;
+  color: #c00;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.intent-section,
+.challenge-section,
+.proof-section,
+.nft-section {
+  background: white;
+  padding: 30px;
+  margin-bottom: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.intent-section h2,
+.challenge-section h2,
+.proof-section h2,
+.nft-section h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+.intent-input,
+.solution-input {
+  width: 100%;
+  min-height: 120px;
+  padding: 15px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.intent-input:focus,
+.solution-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.primary-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.primary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondary-button {
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 5px;
+  transition: all 0.2s;
+}
+
+.secondary-button:hover {
+  background: #667eea;
+  color: white;
+}
+
+.challenge-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #f0f0f0;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.badge.reward {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.challenge-description {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  border-left: 4px solid #667eea;
+}
+
+.tasks-section {
+  margin: 20px 0;
+}
+
+.tasks-section h3 {
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.task-list {
+  list-style: none;
+  padding: 0;
+}
+
+.task-item {
+  background: #f9f9f9;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.task-item:hover {
+  background: #f0f0f0;
+}
+
+.task-item label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.task-item input[type="checkbox"] {
+  margin-right: 12px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.task-item .required {
+  font-weight: 600;
+}
+
+.task-points {
+  margin-left: auto;
+  background: #667eea;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.solution-section {
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 2px solid #eee;
+}
+
+.proof-card,
+.nft-card {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.proof-detail,
+.nft-detail {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.proof-detail:last-child,
+.nft-detail:last-child {
+  border-bottom: none;
+}
+
+.proof-detail label,
+.nft-detail label {
+  font-weight: 600;
+  color: #666;
+}
+
+.proof-detail code {
+  background: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.verified {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.pending {
+  color: #ffc107;
+  font-weight: bold;
+}
+
+.score {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.nft-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.nft-image {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.nft-badge {
+  text-align: center;
+  color: white;
+}
+
+.nft-badge .level {
+  display: block;
+  font-size: 4em;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.nft-badge .label {
+  display: block;
+  font-size: 1.2em;
+  opacity: 0.9;
+}
+
+.nft-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.interface-footer {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .proof-of-skill-interface {
+    padding: 10px;
+  }
+  
+  .interface-header h1 {
+    font-size: 1.8em;
+  }
+  
+  .challenge-metadata {
+    flex-direction: column;
+  }
+  
+  .nft-actions {
+    flex-direction: column;
+  }
+  
+  .secondary-button {
+    width: 100%;
+  }
+}
