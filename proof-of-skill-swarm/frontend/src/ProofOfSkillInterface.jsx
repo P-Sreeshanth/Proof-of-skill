@@ -10,12 +10,15 @@ const ProofOfSkillInterface = () => {
   const [processingState, setProcessingState] = useState('idle');
   const [error, setError] = useState(null);
   const [tasksCompleted, setTasksCompleted] = useState([]);
+  const [testOutput, setTestOutput] = useState('');
 
   const API_BASE = {
     intent: process.env.REACT_APP_QUANTUM_INTENT_URL || 'http://localhost:3001',
     challenge: process.env.REACT_APP_CHALLENGE_GENERATOR_URL || 'http://localhost:3002',
     proof: process.env.REACT_APP_ZK_PROOF_URL || 'http://localhost:3005',
-    nft: process.env.REACT_APP_SKILL_NFT_URL || 'http://localhost:3007'
+    nft: process.env.REACT_APP_SKILL_NFT_URL || 'http://localhost:3007',
+    pythonRunner: process.env.REACT_APP_PYTHON_RUNNER_URL || 'http://localhost:3012',
+    explorer: process.env.REACT_APP_EXPLORER_URL || 'http://localhost:3013'
   };
 
   const processIntent = async () => {
@@ -49,12 +52,85 @@ const ProofOfSkillInterface = () => {
       const challenge = await challengeResponse.json();
       
       setCurrentChallenge({...challenge, startTime: Date.now()});
+      // If problem has starter code, preload it into the editor
+      if (challenge.problem && challenge.problem.starterCode) {
+        setSolution(challenge.problem.starterCode);
+      } else {
+        setSolution('');
+      }
       setProcessingState('ready');
       setTasksCompleted([]);
+      setTestOutput('');
 
     } catch (err) {
       setError(err.message);
       setProcessingState('idle');
+    }
+  };
+
+  const runTestsInBrowser = () => {
+    if (!currentChallenge || !currentChallenge.problem) {
+      setTestOutput('No problem/test spec available.');
+      return;
+    }
+    const { functionName, tests, language } = currentChallenge.problem;
+    if (language !== 'javascript') {
+      setTestOutput('Only JavaScript tests are supported in-browser.');
+      return;
+    }
+    try {
+      // eslint-disable-next-line no-new-func
+      const userModule = new Function(`${solution}\nreturn typeof ${functionName}==='function'?${functionName}:undefined;`);
+      const userFn = userModule();
+      if (typeof userFn !== 'function') {
+        setTestOutput(`Function ${functionName} not found.`);
+        return;
+      }
+      let passed = 0;
+      let logs = [];
+      tests.forEach((t, idx) => {
+        const input = t.inputs;
+        const expected = t.output;
+        let actual;
+        try {
+          actual = Array.isArray(input) ? userFn(...input) : userFn(input);
+        } catch (e) {
+          logs.push(`Test #${idx+1}: threw error: ${e.message}`);
+          return;
+        }
+        const equal = JSON.stringify(actual) === JSON.stringify(expected);
+        if (equal) {
+          passed += 1;
+          logs.push(`Test #${idx+1}: passed`);
+        } else {
+          logs.push(`Test #${idx+1}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+        }
+      });
+      logs.unshift(`Passed ${passed}/${tests.length} tests`);
+      setTestOutput(logs.join('\n'));
+    } catch (e) {
+      setTestOutput(`Execution error: ${e.message}`);
+    }
+  };
+
+  const runPythonTests = async () => {
+    if (!currentChallenge || !currentChallenge.problem) return;
+    try {
+      const res = await fetch(`${API_BASE.pythonRunner}/run-tests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: solution,
+          tests: currentChallenge.problem.tests,
+          functionName: currentChallenge.problem.functionName
+        })
+      });
+      const data = await res.json();
+      const header = `Passed ${data.passed || 0}/${data.total || 0} tests`;
+      const logs = Array.isArray(data.logs) ? data.logs.join('\n') : '';
+      setTestOutput(`${header}\n${logs}`);
+    } catch (e) {
+      setTestOutput(`Runner error: ${e.message}`);
     }
   };
 
@@ -75,7 +151,8 @@ const ProofOfSkillInterface = () => {
           solutionData: {
             solution,
             completionTime: Math.floor((Date.now() - currentChallenge.startTime) / 1000),
-            tasksCompleted: tasksCompleted.length
+            tasksCompleted: tasksCompleted.length,
+            localTestResult: testOutput
           },
           solverAddress
         })
@@ -99,12 +176,14 @@ const ProofOfSkillInterface = () => {
       setProof({...generatedProof, ...verificationResult});
       setProcessingState('complete');
 
-      // Mock NFT minting
+      // Mock NFT minting (include mock links)
       setSkillNFT({
         tokenId: Math.floor(Math.random() * 10000),
         skillType: currentChallenge.domain,
         proficiencyLevel: Math.floor(verificationResult.score / 10),
-        verificationCount: 1
+        verificationCount: 1,
+        explorerUrl: `http://localhost:3000/explorer/mock/${generatedProof.proofId}`,
+        tbaUrl: `http://localhost:3000/tba/mock/${generatedProof.proofId}`
       });
 
     } catch (err) {
@@ -132,6 +211,16 @@ const ProofOfSkillInterface = () => {
       'complete': 'Complete!'
     };
     return states[processingState] || processingState;
+  };
+
+  const copyProofToClipboard = async () => {
+    if (!proof) return;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(proof, null, 2));
+      alert('Proof JSON copied to clipboard');
+    } catch (_) {
+      // no-op
+    }
   };
 
   return (
@@ -180,6 +269,34 @@ const ProofOfSkillInterface = () => {
             <p>{currentChallenge.description}</p>
           </div>
 
+          {currentChallenge.problem && (
+            <div className="problem-section">
+              <h3>{currentChallenge.problem.title}</h3>
+              <p className="problem-statement">{currentChallenge.problem.statement}</p>
+              <div className="editor-controls">
+                <span className="badge">Language: {currentChallenge.problem.language}</span>
+                <span className="badge">Function: {currentChallenge.problem.functionName}</span>
+              </div>
+              <textarea
+                value={solution}
+                onChange={(e) => setSolution(e.target.value)}
+                placeholder={currentChallenge.problem.signature}
+                className="solution-input code-editor"
+                disabled={processingState !== 'ready'}
+              />
+              <div className="editor-actions">
+                {currentChallenge.problem.language === 'javascript' ? (
+                  <button onClick={runTestsInBrowser} disabled={processingState !== 'ready'} className="secondary-button">Run Tests</button>
+                ) : (
+                  <button onClick={runPythonTests} disabled={processingState !== 'ready'} className="secondary-button">Run Tests (Python)</button>
+                )}
+              </div>
+              {testOutput && (
+                <pre className="test-output">{testOutput}</pre>
+              )}
+            </div>
+          )}
+
           {currentChallenge.tasks && currentChallenge.tasks.length > 0 && (
             <div className="tasks-section">
               <h3>Tasks</h3>
@@ -207,13 +324,6 @@ const ProofOfSkillInterface = () => {
 
           <div className="solution-section">
             <h3>Submit Your Solution</h3>
-            <textarea
-              value={solution}
-              onChange={(e) => setSolution(e.target.value)}
-              placeholder="Paste your solution here..."
-              className="solution-input"
-              disabled={processingState !== 'ready'}
-            />
             <button 
               onClick={submitSolution} 
               disabled={processingState !== 'ready' || !solution.trim()}
@@ -284,9 +394,9 @@ const ProofOfSkillInterface = () => {
               </div>
             </div>
             <div className="nft-actions">
-              <button className="secondary-button">View on Explorer</button>
-              <button className="secondary-button">Share Proof</button>
-              <button className="secondary-button">Create TBA</button>
+              <button className="secondary-button" onClick={() => window.open(skillNFT.explorerUrl || '#', '_blank')}>View on Explorer</button>
+              <button className="secondary-button" onClick={copyProofToClipboard}>Share Proof</button>
+              <button className="secondary-button" onClick={() => window.open(skillNFT.tbaUrl || '#', '_blank')}>Create TBA</button>
             </div>
           </div>
         </div>

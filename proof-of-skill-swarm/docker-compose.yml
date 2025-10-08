@@ -30,6 +30,9 @@ services:
       - PERSONALIZATION_ENGINE=enabled
       - NEURAL_NETWORK_URL=http://neural-network:3010
       - QDRANT_URL=http://qdrant-db:6333
+      - LLM_PROVIDER=${LLM_PROVIDER}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-1.5-flash}
     ports:
       - "3002:3002"
     volumes:
@@ -41,37 +44,8 @@ services:
     networks:
       - swarm-network
 
-  # Task Decomposition Engine
-  task-decomposer:
-    build: ./backend/services/task-decomposer
-    environment:
-      - GNN_MODEL_PATH=/models/gnn.pt
-      - TASK_QUEUE_REDIS=redis://redis:6379
-      - NEURAL_NETWORK_URL=http://neural-network:3010
-    ports:
-      - "3003:3003"
-    depends_on:
-      - redis
-      - neural-network
-    networks:
-      - swarm-network
-
-  # Human-AI Symbiosis Interface
-  symbiosis-interface:
-    build: ./backend/services/symbiosis-interface
-    environment:
-      - NEURAL_FEEDBACK=enabled
-      - BCI_COMPATIBILITY=true
-      - REAL_TIME_ADAPTATION=true
-      - NEURAL_NETWORK_URL=http://neural-network:3010
-      - QUANTUM_INTENT_URL=http://quantum-intent-processor:3001
-    ports:
-      - "3004:3004"
-    depends_on:
-      - neural-network
-      - quantum-intent-processor
-    networks:
-      - swarm-network
+  # Task Decomposition Engine (removed - missing directory)
+  # Human-AI Symbiosis Interface (removed - missing directory)
 
   # ZK-STARK Proof Generator
   zk-proof-generator:
@@ -90,75 +64,13 @@ services:
     networks:
       - swarm-network
 
-  # Steganographic Proof Layer
-  steganographic-layer:
-    build: ./backend/services/steganographic-layer
-    environment:
-      - STEGANOGRAPHY_ALGORITHM=lsb
-      - PROOF_STRENGTH=high
-      - DETECTION_RESISTANCE=maximum
-      - ZK_PROOF_URL=http://zk-proof-generator:3005
-    ports:
-      - "3006:3006"
-    volumes:
-      - ./proofs:/app/proofs
-    depends_on:
-      - zk-proof-generator
-    networks:
-      - swarm-network
+  # Steganographic Proof Layer (removed - missing directory)
 
-  # ERC-6551 Skill NFT System
-  skill-nft-system:
-    build: ./backend/services/skill-nft-system
-    environment:
-      - ETHEREUM_RPC=${ETH_RPC_URL:-http://ethereum-node:8545}
-      - CONTRACT_ADDRESS=${SKILL_NFT_CONTRACT:-0x0000000000000000000000000000000000000000}
-      - DYNAMIC_METADATA=enabled
-      - STEGANOGRAPHIC_URL=http://steganographic-layer:3006
-    ports:
-      - "3007:3007"
-    depends_on:
-      - ethereum-node
-      - steganographic-layer
-    networks:
-      - swarm-network
+  # ERC-6551 Skill NFT System (removed - missing directory)
 
-  # Evolution Engine
-  evolution-engine:
-    build: ./backend/services/evolution-engine
-    environment:
-      - NAS_ALGORITHM=efficient_neural_architecture_search
-      - KNOWLEDGE_DISTILLER=distilbert
-      - SELF_IMPROVEMENT_RATE=adaptive
-      - NEURAL_NETWORK_URL=http://neural-network:3010
-      - SKILL_NFT_URL=http://skill-nft-system:3007
-    ports:
-      - "3008:3008"
-    volumes:
-      - ./models:/app/models
-      - ./evolution-data:/app/evolution-data
-    depends_on:
-      - neural-network
-      - skill-nft-system
-    networks:
-      - swarm-network
+  # Evolution Engine (removed - missing directory)
 
-  # Consciousness Metrics
-  consciousness-metrics:
-    build: ./backend/services/consciousness-metrics
-    environment:
-      - IIT_IMPLEMENTATION=pyphi
-      - EMERGENCE_THRESHOLD=0.75
-      - SAFETY_PROTOCOLS=enabled
-      - NEURAL_NETWORK_URL=http://neural-network:3010
-      - EVOLUTION_ENGINE_URL=http://evolution-engine:3008
-    ports:
-      - "3009:3009"
-    depends_on:
-      - neural-network
-      - evolution-engine
-    networks:
-      - swarm-network
+  # Consciousness Metrics (removed - missing directory)
 
   # Supporting Services
   qdrant-db:
@@ -183,6 +95,22 @@ services:
       - "3010:3010"
     volumes:
       - ./models:/app/models
+    networks:
+      - swarm-network
+
+  python-runner:
+    build: ./backend/services/python-runner
+    ports:
+      - "3012:3012"
+    networks:
+      - swarm-network
+
+  explorer:
+    build: ./backend/services/explorer
+    ports:
+      - "3013:3013"
+    volumes:
+      - ./proofs:/app/proofs
     networks:
       - swarm-network
 
@@ -217,12 +145,12 @@ services:
       - REACT_APP_QUANTUM_INTENT_URL=http://localhost:3001
       - REACT_APP_CHALLENGE_GENERATOR_URL=http://localhost:3002
       - REACT_APP_ZK_PROOF_URL=http://localhost:3005
-      - REACT_APP_SKILL_NFT_URL=http://localhost:3007
+      - REACT_APP_PYTHON_RUNNER_URL=http://localhost:3012
+      - REACT_APP_EXPLORER_URL=http://localhost:3013
     depends_on:
       - quantum-intent-processor
       - challenge-generator
       - zk-proof-generator
-      - skill-nft-system
     networks:
       - swarm-network
 

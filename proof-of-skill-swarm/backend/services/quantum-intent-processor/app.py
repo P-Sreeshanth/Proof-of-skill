@@ -75,6 +75,7 @@ class QuantumIntentProcessor:
             'react': ['react', 'jsx', 'component'],
             'python': ['python', 'django', 'flask'],
             'javascript': ['javascript', 'js', 'node'],
+            'sql': ['sql', 'mysql', 'postgres', 'postgresql', 'sqlite', 'query', 'database', 'sql query'],
             'debug': ['debug', 'fix', 'error', 'bug'],
             'design': ['design', 'ui', 'ux', 'interface']
         }
